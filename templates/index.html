@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Network Analyzer</title>
+    <!-- Loads Chart.js, a JavaScript library used to draw charts (bar, line, pie, etc.)  -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      rel="stylesheet"
+      href="/static/style.css"
+    />
+  </head>
+  <body>
+    <h1 class="heading">!!! Packet Sentinels !!!</h1>
+    <h3 class="heading">
+      <i><u>Network Traffic Analyzer</u></i>
+    </h3>
+
+    <form
+      id="uploadForm"
+      enctype="multipart/form-data"
+    >
+      <input
+        type="file"
+        name="file"
+        accept=".csv"
+        required
+      />
+      <button type="submit">Upload & Analyze</button>
+    </form>
+
+    <div id="charts">
+      <h2>Top Source IPs</h2>
+      <canvas id="sourceChart"></canvas>
+
+      <h2>Top Protocols</h2>
+      <canvas id="protocolChart"></canvas>
+    </div>
+
+    <script>
+      const form = document.getElementById("uploadForm");
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(form);
+
+        const res = await fetch("/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          alert(await res.text());
+          return;
+        }
+
+        const data = await res.json();
+        document.getElementById("charts").style.display = "block";
+
+        new Chart(document.getElementById("sourceChart"), {
+          type: "bar",
+          data: {
+            labels: data.top_sources.labels,
+            datasets: [
+              {
+                label: "Top Source IPs",
+                data: data.top_sources.counts,
+                backgroundColor: "red",
+              },
+            ],
+          },
+        });
+
+        new Chart(document.getElementById("protocolChart"), {
+          type: "bar",
+          data: {
+            labels: data.top_protocols.labels,
+            datasets: [
+              {
+                label: "Top Protocols",
+                data: data.top_protocols.counts,
+                backgroundColor: "red",
+              },
+            ],
+          },
+        });
+      });
+    </script>
+  </body>
+</html>
